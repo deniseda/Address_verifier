@@ -172,3 +172,4 @@ cython_debug/
 
 # Ignore generated html file map
 mappa_indirizzi.html
+mappa_distanze_tra_indirizzi.html
