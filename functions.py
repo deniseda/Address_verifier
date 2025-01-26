@@ -7,37 +7,53 @@ import folium
 import requests
 
 
+############ questa versione prende come input o una lista di indirizzi o una colonna di un dataframe 
+########### esempio per un df ->  verifica_indirizzi(df, nome_colonna = " ")
+########### lista -> verifica_indirizzi(nome_lista)
 
-#### funzione per la verifica degli indirizzi
+def verifica_indirizzi(input_data, nome_colonna=None):
 
-
-def verifica_indirizzi(lista_indirizzi):
     geolocator = Nominatim(user_agent='MyAPP')
     risultati = {}
+
+    # Recupera gli indirizzi da una lista o un DataFrame
+    if isinstance(input_data, pd.DataFrame):
+        if nome_colonna is None:
+            raise ValueError("Se il dato di input è un DataFrame, devi specificare il nome della colonna con gli indirizzi.")
+        lista_indirizzi = input_data[nome_colonna].tolist()
+    elif isinstance(input_data, list):
+        lista_indirizzi = input_data
+    else:
+        raise TypeError("L'input deve essere una lista o un DataFrame.")
+
+    # Elaborazione degli indirizzi
     for ind in lista_indirizzi:
-        try :
-            location = geolocator.geocode(ind, timeout = 30, addressdetails=True)
-            print(location)
-            if location : 
-                dettagli = location.raw.get('address',{})
-                print(f"Dettagli indirizzo per '{ind}': {dettagli}")
-                # citta
-                citta = dettagli.get('city') or dettagli.get('village') or ('Non disponibile')
+        try:
+            location = geolocator.geocode(ind, timeout=30, addressdetails=True)
+            if location:
+                dettagli = location.raw.get('address', {})
+                
+                # Estrarre dettagli specifici
+                ### citta 
+                citta = dettagli.get('city') or dettagli.get('village') or 'Non disponibile'
                 # regione
                 regione = dettagli.get('state', 'Non disponibile')
-                # nazione
+                #stato
                 stato = dettagli.get('country', 'Non disponibile')
-                
 
                 risultati[ind] = (True, location.latitude, location.longitude, citta, regione, stato)
             else:
-                risultati[ind] =(False, None, None, None, None, None)
+                risultati[ind] = (False, None, None, None, None, None)
         except GeocoderTimedOut:
             risultati[ind] = (False, None, None, 'Timeout', 'Non disponibile', 'Non disponibile')
         except Exception as e:
             risultati[ind] = (False, None, None, f'Errore: {e}', 'Non disponibile', 'Non disponibile')
-    
+
     return risultati
+
+
+
+
 
 ######## funzione per creare una mappa dinamica 
 
